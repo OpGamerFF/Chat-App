@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #f5f3ff;
+  --color-primary-100: #ede9fe;
+  --color-primary-200: #ddd6fe;
+  --color-primary-300: #c4b5fd;
+  --color-primary-400: #a78bfa;
+  --color-primary-500: #8b5cf6;
+  --color-primary-600: #7c3aed;
+  --color-primary-700: #6d28d9;
+  --color-primary-800: #5b21b6;
+  --color-primary-900: #4c1d95;
+
+  --color-dark-50: #f8fafc;
+  --color-dark-100: #f1f5f9;
+  --color-dark-200: #e2e8f0;
+  --color-dark-300: #cbd5e1;
+  --color-dark-400: #94a3b8;
+  --color-dark-500: #64748b;
+  --color-dark-600: #475569;
+  --color-dark-700: #334155;
+  --color-dark-800: #1e293b;
+  --color-dark-900: #0f172a;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --dark-glass-bg: rgba(15, 23, 42, 0.7);
+  --dark-glass-border: rgba(51, 65, 85, 0.3);
+
+  --font-inter: "Inter", sans-serif;
+  --font-outfit: "Outfit", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-inter bg-white text-gray-900 transition-colors duration-200;
+  }
+}
+
+.dark body {
+  @apply bg-dark-900 text-dark-50;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar, .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .font-grand-hotel {
+     font-family: 'Grand Hotel', cursive;
+  }
+}
+
+@keyframes zoom-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-in {
+  animation-duration: 200ms;
+  animation-fill-mode: both;
+}
+
+.zoom-in {
+  animation-name: zoom-in;
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-2 bg-primary-500 text-white rounded-xl font-semibold hover:bg-primary-600 transition-all active:scale-95 shadow-md shadow-primary-200;
+  }
+}
