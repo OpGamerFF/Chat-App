@@ -86,6 +86,8 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    console.log('[register] Attempting registration for:', email);
+
     const existingUser = await User.findOne({ 
       $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] 
     });
@@ -97,6 +99,7 @@ exports.register = async (req, res) => {
     const userCount = await User.countDocuments();
     const role = userCount === 0 ? 'admin' : 'user';
 
+    // Create and save the user first so the pre('save') hook hashes the password
     const user = new User({
       username: username.toLowerCase(),
       email: email.toLowerCase(),
@@ -105,6 +108,11 @@ exports.register = async (req, res) => {
       role
     });
 
+    console.log('[register] Saving new user, password will be hashed by pre-save hook');
+    await user.save();
+    console.log('[register] User saved successfully, id:', user._id);
+
+    // Now set the refresh token and save again (password unchanged, hook skips re-hashing)
     const refreshToken = generateRefreshToken(user._id);
     user.refreshToken = refreshToken;
     await user.save();
@@ -119,11 +127,13 @@ exports.register = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
 
+    console.log('[register] Registration successful for:', email);
     res.status(201).json({
       accessToken,
       user
     });
   } catch (error) {
+    console.error('[register] Error during registration:', error.message, error.stack);
     res.status(500).json({ message: 'Registration failed', error: error.message });
   }
 };
@@ -132,8 +142,26 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    console.log('[login] Attempting login for:', email);
+
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
+      console.log('[login] No user found for email:', email);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    if (!user.password) {
+      console.error('[login] User found but password field is missing — was it saved with select:false?');
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const isMatch = await user.comparePassword(password);
+    console.log('[login] Password match result:', isMatch);
+    if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -151,11 +179,13 @@ exports.login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    console.log('[login] Login successful for:', email);
     res.json({
       accessToken,
       user
     });
   } catch (error) {
+    console.error('[login] Error during login:', error.message, error.stack);
     res.status(500).json({ message: 'Login failed', error: error.message });
   }
 };
