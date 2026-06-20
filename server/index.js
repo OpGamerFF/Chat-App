@@ -17,9 +17,24 @@ const noteRoutes = require('./routes/noteRoutes');
 
 const app = express();
 const server = http.createServer(app);
+
+// Allow the main Netlify production URL, any Netlify preview deploy URL
+// (*.netlify.app), and localhost for local development.
+const allowedOrigin = (origin, callback) => {
+  if (
+    !origin ||
+    /^https:\/\/([a-z0-9-]+--)?pulse-1\.netlify\.app$/.test(origin) ||
+    /^http:\/\/localhost(:\d+)?$/.test(origin)
+  ) {
+    callback(null, true);
+  } else {
+    callback(new Error(`CORS: origin not allowed — ${origin}`));
+  }
+};
+
 const io = socketio(server, {
   cors: {
-    origin: process.env.CLIENT_URL || true,
+    origin: allowedOrigin,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -32,7 +47,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 app.use(cors({
-  origin: process.env.CLIENT_URL || true,
+  origin: allowedOrigin,
   credentials: true,
 }));
 
